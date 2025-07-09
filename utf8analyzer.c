@@ -101,6 +101,46 @@ void print_six_codepoints_substring(const char *str){
     printf("'\n"); 
 }
 
+uint32_t decode_utf8(const char *str, int *len){
+		unsigned char c = str[0];
+		if ((c & 0x80) == 0){
+		    *len = 1;
+		    return c;
+		} else if ((c & 0xE0) == 0xC0){
+		    *len = 2;
+		    return ((str[0] & 0x1F) << 6) |
+		        (str[1] & 0x3F);
+		} else if (( c & 0xF0) == 0xE0){
+		    *len = 3;
+		    return ((str[0] & 0xF0) << 12) |
+		        ((str[1] & 0x3F) << 6) |
+			(str[2] & 0x3F);
+		} else if (( c & 0xF8) == 0xF0){
+		    *len = 4;
+		    return ((str[0] & 0x07) << 18) |
+		        (( str[1] & 0x3F) << 12) |
+			((str[2] & 0x3F) << 6)|
+			(str[3] & 0x3F);
+		}
+} 
+
+int is_animal_emoji (uint32_t codepoint){
+	return (codepoint >= 0x1F400 && codepoint <= 0x1F43F) ||
+		(codepoint >= 0x1F980 && codepoint <= 0x1F9AE);
+}
+
+void print_animal_emojis(const char *str){
+	int i = 0;
+	while (str[i] != '\0'){
+		int len = 0;
+		uint32_t cp = decode_utf8(&str[i], &len);
+		if(is_animal_emoji(cp)){
+			fwrite(&str[i], 1, len, stdout);
+		}
+		i += len;
+	}
+	printf("\n");
+}
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Usage: utf8analyzer \"<UTF-8 encoded string>\"\n");
@@ -108,22 +148,20 @@ int main(int argc, char *argv[]) {
     }
 
     const char *input = argv[1];
-
+    size_t byte_length = strlen(input);
     printf("Valid ASCII: %s\n", is_ascii(input) ? "true" : "false");
     printf("Uppercase ASCII: ");
     print_uppercase_ascii(input);
     printf("\n");
-    printf("Length in bytes: %lu\n", strlen(input));
-   
-
+    printf("Length in bytes: %lu\n", byte_length);
     
-	size_t byte_length = strlen(input);
     // part 4 
     int cp_count = 0;
     for (int i = 0; i < byte_length; ) {
         unsigned char byte = input[i];
         if (byte < 128) {
             i += 1; 
+
         } else if ((byte & 0xE0) == 0xC0) {
             i += 2; 
         } else if ((byte & 0xF0) == 0xE0) {
@@ -189,4 +227,7 @@ int main(int argc, char *argv[]) {
 	}
 	printf("\n");
 
+
+    printf("Animal emojis: ");
+    print_animal_emojis(input);
 }
