@@ -114,5 +114,79 @@ int main(int argc, char *argv[]) {
     print_uppercase_ascii(input);
     printf("\n");
     printf("Length in bytes: %lu\n", strlen(input));
-    // implement the UTF-8 analyzer here
+   
+
+    
+	size_t byte_length = strlen(input);
+    // part 4 
+    int cp_count = 0;
+    for (int i = 0; i < byte_length; ) {
+        unsigned char byte = input[i];
+        if (byte < 128) {
+            i += 1; 
+        } else if ((byte & 0xE0) == 0xC0) {
+            i += 2; 
+        } else if ((byte & 0xF0) == 0xE0) {
+            i += 3; 
+        } else if ((byte & 0xF8) == 0xF0) {
+            i += 4; 
+        } else {
+            break;
+        }
+        cp_count++;
+    }
+    printf("Number of code points: %d\n", cp_count);
+	
+    //part 5
+    printf("Code points as decimal numbers:");
+    for (int i = 0; i < byte_length; ) {
+        int cp = 0;
+        unsigned char b1 = input[i];
+        unsigned char b2 = input[i + 1];
+        unsigned char b3 = input[i + 2];
+        unsigned char b4 = input[i + 3];
+
+        if (b1 < 128) {
+            cp = b1;
+            i += 1;
+        } else if (b1 >= 192 && b1 <= 223) {
+            cp = ((b1 & 0x1F) << 6) | (b2 & 0x3F);
+            i += 2;
+        } else if (b1 >= 224 && b1 <= 239) {
+            cp = ((b1 & 0x0F) << 12) | ((b2 & 0x3F) << 6) | (b3 & 0x3F);
+            i += 3;
+        } else if (b1 >= 240 && b1 <= 247) {
+            cp = ((b1 & 0x07) << 18) | ((b2 & 0x3F) << 12) |
+                 ((b3 & 0x3F) << 6) | (b4 & 0x3F);
+            i += 4;
+        }
+
+        printf(" %d", cp);
+    }
+    printf("\n");
+
+    //part 6
+    printf("Bytes per code point:");
+	for (int i = 0; i < byte_length; ) {
+    	unsigned char b1 = input[i];
+    	int bytes_used = 0;
+
+    if (b1 < 128) {
+        bytes_used = 1;
+    } else if ((b1 & 0xE0) == 0xC0) {
+        bytes_used = 2;
+    } else if ((b1 & 0xF0) == 0xE0) {
+        bytes_used = 3;
+    } else if ((b1 & 0xF8) == 0xF0) {
+        bytes_used = 4;
+    } else {
+        // invalid UTF-8, stop or handle error
+        break;
+    }
+
+    		printf(" %d", bytes_used);
+    		i += bytes_used;
+	}
+	printf("\n");
+
 }
